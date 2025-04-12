@@ -224,12 +224,16 @@ void process_client_message(int fd)
 void server_main_loop(int sockfd, int max, int index)
 {
     // --- BUCLE PRINCIPAL DEL SERVIDOR ---
+    // implementa un servidor socket usando el patrón conocido como "multiplexación de entrada/salida" con la función select()
     while (1) {
         // Copia el conjunto principal a los conjuntos de lectura y escritura
+        //Estos conjuntos (fd_set) son estructuras de datos que representan un grupo de descriptores de archivo que queremos monitorear
         cur_read = cur_write = cur;
 
-        // Espera a que algún descriptor esté listo para lectura/escritura
+        // select monitorea múltiples descriptores para ver cuáles están listos para operaciones de I/O.
         // max+1 porque select necesita el número más alto de FD + 1
+        // excepciones y timeout estaran en NULL
+        // cuando select() retorna, cur_read y cur_write contienen solo los descriptores que están listos.
         if (select(max + 1, &cur_read, &cur_write, NULL, NULL) < 0)
             continue;        // Si hay error, continúa el bucle
 
@@ -238,6 +242,7 @@ void server_main_loop(int sockfd, int max, int index)
             // Verifica si el descriptor está listo para lectura
             if (FD_ISSET(fd, &cur_read)) {
                 // --- MANEJO DE NUEVAS CONEXIONES ---
+                // si sockfd(socket de servidor) está listo para lectura, indica que hay una nueva conexión entrante
                 if (fd == sockfd) {
                     handle_new_connection(sockfd, &max, &index);
                 } 
